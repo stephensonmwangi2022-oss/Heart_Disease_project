@@ -5,16 +5,15 @@ import os
 import pandas as pd
 import streamlit as st
 import joblib
+base_path = os.path.dirname(__file__)
 
 # Set page to wide mode and add a heart icon
-st.set_page_config(page_title="HeartCare AI", page_icon="heart_disease_1.jpg", layout="wide")
-
+icon_path = os.path.join(base_path, "heart_disease_1.jpg")
+st.set_page_config(page_title="HeartCare AI", page_icon=icon_path, layout="wide")
 # Handle paths so it works on any computer
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from clean.preprocessing import DataPreprocessor
-
 # --- LOAD MODELS ---
-base_path = os.path.dirname(__file__)
 model_path = os.path.join(base_path, "..", "notebooks", "heart_disease_predictor.pkl")
 proc_path = os.path.join(base_path, "..", "notebooks", "strategies.pkl")
 
@@ -24,7 +23,8 @@ preprocessor = joblib.load(proc_path)
 # --- SIDEBAR (The Left Hand Corner) ---
 with st.sidebar:
     # Use your heart image here
-    st.image("heart_disease.jpg", width='stretch')
+    header_image_path = os.path.join(base_path, "heart_disease.jpg")
+    st.image(header_image_path, width='stretch')
     
     st.markdown("## 🏥 Healthcare Awareness")
     st.error("### 📢 CAUTION\n**Heart disease kills.** Early identification is the only way to stay ahead.")
