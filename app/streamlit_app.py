@@ -1,5 +1,8 @@
 import warnings
 warnings.filterwarnings("ignore")
+import matplotlib.pyplot as plt
+import pandas as pd
+import shap
 import sys
 import os
 import pandas as pd
@@ -71,19 +74,63 @@ st.divider()
 
 input_df = pd.DataFrame({
     'age': [Age], 'trestbps': [trestbps], 'chol': [chol], 'thalch': [thalch],
-    'oldpeak': [oldpeak], 'ca': [ca], 'sex': [sex], 'cp': [cp],
+    'oldpeak': [oldpeak], 'ca': [ca], "sex":[sex], 'cp': [cp],
     'fbs': [fbs], 'restecg': [restecg], 'exang': [exang], 'slope': [slope], 'thal': [thal]
 })
 
+# ... (inside your if st.button block)
 if st.button("Analyze Heart Health", type="primary", width='stretch'):
+    # 1. Process the data
     input_processed = preprocessor.transform(input_df)
+    
+    # 2. Get the ACTUAL feature names after One-Hot Encoding
+    # This is the 'secret sauce' to fix your zero-bar problem
+    feature_names = input_processed.columns.tolist()
+
+    # 3. Predict
     prediction = model.predict(input_processed)[0]
     prob = model.predict_proba(input_processed)[0][1]
-
-    # Result Display
     if prediction == 1:
         st.error(f"### ⚠️ High Risk: {prob*100:.1f}% probability")
         st.warning("Immediate consultation with a cardiologist is recommended.")
     else:
         st.success(f"### ✅ Low Risk: {(1-prob)*100:.1f}% confidence")
         st.write("Patient metrics are within a healthy range! Keep up the healthy lifestyle.")
+
+    # ... (Your Error/Success messages here)
+
+    # 4. FIXED SHAP LOGIC
+    # --- REPLACE YOUR SHAP SECTION WITH THIS ---
+    st.divider()
+    st.subheader("🔍 Clinical Factor Analysis")
+
+
+# 1. Get the processed data and feature names
+    input_processed = preprocessor.transform(input_df)
+    feature_names = input_processed.columns.tolist()
+
+# 2. Manual Impact Calculation
+# For Logistic Regression: Impact = Feature Value * Model Coefficient
+    weights = model.coef_[0]
+    patient_values = input_processed.iloc[0].values
+    impacts = weights * patient_values
+
+# 3. Create a DataFrame for easy sorting
+    impact_df = pd.DataFrame({
+        'Feature': feature_names,
+        'Impact': impacts
+    }).sort_values(by='Impact', ascending=True)
+
+# Filter out features with 0 impact to keep the graph clean
+    impact_df = impact_df[impact_df['Impact'] != 0].tail(10) 
+
+# 4. Plotting
+    fig, ax = plt.subplots(figsize=(10, 6))
+    colors = ['#ff4b4b' if x > 0 else '#0068c9' for x in impact_df['Impact']]
+
+    ax.barh(impact_df['Feature'], impact_df['Impact'], color=colors)
+    ax.axvline(0, color='black', linewidth=0.8)
+    ax.set_xlabel("Contribution to Heart Disease Risk")
+    ax.set_title("Top 10 Factors for this Patient")
+
+    st.pyplot(fig)
