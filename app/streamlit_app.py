@@ -40,7 +40,8 @@ LABEL_MAP = {
     'exang_True': 'Exercise Induced Angina: Yes',
     'fbs_True': 'High Fasting Blood Sugar',
     'restecg_lv hypertrophy': 'ECG: LV Hypertrophy',
-    'restecg_st-t abnormality': 'ECG: ST-T Abnormality'
+    'restecg_st-t abnormality': 'ECG: ST-T Abnormality',
+    'restecg_normal': 'ECG: Normal',
 }
 
 base_path = os.path.dirname(__file__)
