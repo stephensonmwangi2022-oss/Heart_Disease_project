@@ -8,6 +8,41 @@ import os
 import pandas as pd
 import streamlit as st
 import joblib
+
+LABEL_MAP = {
+    # Base Features
+    'age': 'Patient Age',
+    'trestbps': 'Resting Blood Pressure',
+    'chol': 'Cholesterol Level',
+    'thalch': 'Max Heart Rate Achieved',
+    'oldpeak': 'ST Depression (Exercise)',
+    'ca': 'Major Vessels (Fluoroscopy)',
+    'sex_Male': 'Gender: Male',
+    'sex_Female': 'Gender: Female',
+    
+    # Chest Pain Types (cp)
+    'cp_typical angina': 'Chest Pain: Typical Angina',
+    'cp_atypical angina': 'Chest Pain: Atypical Angina',
+    'cp_non-anginal': 'Chest Pain: Non-Anginal',
+    'cp_asymptomatic': 'Chest Pain: Asymptomatic',
+    
+    # Thallium Test (thal)
+    'thal_normal': 'Thallium: Normal',
+    'thal_fixed defect': 'Thallium: Fixed Defect',
+    'thal_reversable defect': 'Thallium: Reversable Defect',
+    
+    # ST Slope
+    'slope_upsloping': 'ST Slope: Upsloping',
+    'slope_flat': 'ST Slope: Flat',
+    'slope_downsloping': 'ST Slope: Downsloping',
+    
+    # ECG and Others
+    'exang_True': 'Exercise Induced Angina: Yes',
+    'fbs_True': 'High Fasting Blood Sugar',
+    'restecg_lv hypertrophy': 'ECG: LV Hypertrophy',
+    'restecg_st-t abnormality': 'ECG: ST-T Abnormality'
+}
+
 base_path = os.path.dirname(__file__)
 
 # Set page to wide mode and add a heart icon
@@ -117,20 +152,27 @@ if st.button("Analyze Heart Health", type="primary", width='stretch'):
 
 # 3. Create a DataFrame for easy sorting
     impact_df = pd.DataFrame({
-        'Feature': feature_names,
-        'Impact': impacts
-    }).sort_values(by='Impact', ascending=True)
+    'Feature': feature_names,
+    'Impact': impacts
+})
 
-# Filter out features with 0 impact to keep the graph clean
-    impact_df = impact_df[impact_df['Impact'] != 0].tail(10) 
+# Apply the mapping: If the name is in LABEL_MAP, use it. Otherwise, keep original.
+    impact_df['Feature'] = impact_df['Feature'].map(lambda x: LABEL_MAP.get(x, x))
 
-# 4. Plotting
+# Sort and filter
+    impact_df = impact_df[impact_df['Impact'] != 0].sort_values(by='Impact', ascending=True).tail(10)
+
+# 4. Plotting (Enhanced)
     fig, ax = plt.subplots(figsize=(10, 6))
     colors = ['#ff4b4b' if x > 0 else '#0068c9' for x in impact_df['Impact']]
 
     ax.barh(impact_df['Feature'], impact_df['Impact'], color=colors)
     ax.axvline(0, color='black', linewidth=0.8)
-    ax.set_xlabel("Contribution to Heart Disease Risk")
-    ax.set_title("Top 10 Factors for this Patient")
+
+# Clean up the chart appearance
+    ax.set_xlabel("Contribution to Heart Disease Risk", fontsize=10, fontweight='bold')
+    ax.set_title("Top 10 Factors for this Patient", fontsize=14, pad=20)
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
 
     st.pyplot(fig)
